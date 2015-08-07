@@ -28,9 +28,11 @@
 
 <%= link_to 'New Message', new_message_path %>
 
+<!-- <script src="http://localhost:3001/socket.io/lib/socket.io.js"></script> -->
+
 <script type="text/javascript" charset="utf-8">
 $(function(){
-  var socket = io.connect('//localhost:3000/');
+  var socket = io.connect('http://localhost:3001/');
   socket.on('message', function (data) {
     data = JSON.parse(data);
     console.log(data);

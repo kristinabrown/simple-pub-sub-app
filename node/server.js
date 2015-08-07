@@ -4,7 +4,7 @@ var express = require('express');
 var app = express();
 
 var server = require('http').createServer(app);
-var io = require('socket.io').listen(server);
+var io = require('socket.io')(server);
 
 var redis = require("redis");
 
@@ -16,22 +16,25 @@ app.use(function(req, res, next){
   next();
 });
 
-io.sockets.on('connection', function (socket) {
+var subscribe = redis.createClient();
+subscribe.subscribe('notifications.create');
 
-  // subscribe to redis
-  var subscribe = redis.createClient();
-  subscribe.subscribe('notifications.create');
+subscribe.on("message", function(channel, message) {
+  console.log("from rails to subscriber:", channel, message);
+});
+
+io.on('connection', function (socket) {
+  console.log('A user has connected!');
 
   // relay redis messages to connected socket
   subscribe.on("message", function(channel, message) {
     console.log("from rails to subscriber:", channel, message);
-    socket.emit('message', message)
+    io.sockets.emit('message', message)
   });
 
   // unsubscribe from redis if session disconnects
   socket.on('disconnect', function () {
     console.log("user disconnected");
-
     subscribe.quit();
   });
 
